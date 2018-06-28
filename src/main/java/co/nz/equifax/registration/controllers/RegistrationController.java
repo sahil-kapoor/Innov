@@ -1,19 +1,22 @@
 package co.nz.equifax.registration.controllers;
 
 
+import javax.validation.constraints.NotNull;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import co.nz.equifax.registration.entity.ClientOrg;
 import co.nz.equifax.registration.entity.UuidCode;
 import co.nz.equifax.registration.repository.ClientOrgRepository;
 import co.nz.equifax.registration.repository.UuidCodeRepository;
 import co.nz.equifax.utils.Util;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @RestController
 @RequestMapping("/registration")

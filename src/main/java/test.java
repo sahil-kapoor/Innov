@@ -1,9 +1,6 @@
-import co.nz.equifax.InnovApplication;
-
 import java.io.IOException;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.boot.SpringApplication;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

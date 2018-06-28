@@ -1,9 +1,11 @@
 package co.nz.equifax.configurations;
 
-import co.nz.equifax.filters.JWTAuthenticationFilter;
-import co.nz.equifax.filters.JWTAuthorizationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -11,45 +13,105 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static co.nz.equifax.utils.SecurityConstants.SIGN_UP_URL;
+import co.nz.equifax.security.JwtAuthenticationEntryPoint;
+import co.nz.equifax.security.JwtAuthenticationFilter;
 
+@Configuration
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter {
+
+
+  @Autowired
   private UserDetailsService userDetailsService;
-  private BCryptPasswordEncoder bCryptPasswordEncoder;
+  
+  @Autowired
+  private JwtAuthenticationEntryPoint unauthorizedHandler;
 
-  public WebSecurity(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
-    this.userDetailsService = userDetailsService;
-    this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+  @Bean
+  public JwtAuthenticationFilter jwtAuthenticationFilter() {
+      return new JwtAuthenticationFilter();
   }
-
+  
+  @Bean(BeanIds.AUTHENTICATION_MANAGER)
   @Override
-  protected void configure(HttpSecurity http) throws Exception {
-  /*  http.cors().and().csrf().disable().authorizeRequests()
-            .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
-            .anyRequest().authenticated()
-            .and()
-            .addFilter(new JWTAuthenticationFilter(authenticationManager()))
-            .addFilter(new JWTAuthorizationFilter(authenticationManager()))
-            // this disables session creation on Spring Security
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);*/
-    http.cors().and().csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
-    http.headers().frameOptions().disable();
-  }
-
-  @Override
-  public void configure(AuthenticationManagerBuilder auth) throws Exception {
-    auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
+  public AuthenticationManager authenticationManagerBean() throws Exception {
+      return super.authenticationManagerBean();
   }
 
   @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
-    return source;
+  public PasswordEncoder passwordEncoder() {
+      return new BCryptPasswordEncoder();
   }
+  
+
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+      http
+              .cors()
+                  .and()
+              .csrf()
+                  .disable()
+              .exceptionHandling()
+                  .authenticationEntryPoint(unauthorizedHandler)
+                  .and()
+              .sessionManagement()
+                  .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                  .and()
+              .authorizeRequests()
+                  .antMatchers("/",
+                      "/favicon.ico",
+                      "/**/*.png",
+                      "/**/*.gif",
+                      "/**/*.svg",
+                      "/**/*.jpg",
+                      "/**/*.html",
+                      "/**/*.css",
+                      "/**/*.js")
+                      .permitAll().antMatchers(
+                        HttpMethod.GET,"/", "/v2/api-docs",           // swagger
+                        "/webjars/**",            // swagger-ui webjars
+                        "/swagger-resources/**",  // swagger-ui resources
+                        "/configuration/**",      // swagger configuration
+                        "/*.html",
+                        "/favicon.ico",
+                        "/**/*.html",
+                        "/**/*.css",
+                        "/**/*.js"
+                ).permitAll()
+                      /*.antMatchers(HttpMethod.GET,"/users/**")
+                      .permitAll()*/
+                      .antMatchers("/users/**")
+                      .permitAll()
+                      .antMatchers("/h2-console/**")
+                      .permitAll()
+               
+               
+                  .anyRequest()
+                      .authenticated();
+      http.cors().and().csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
+      http.headers().frameOptions().disable();
+      // Add our custom JWT security filter
+      http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+  }
+
+  
+/*@Override
+  protected void configure(HttpSecurity http) throws Exception {
+    
+    http.cors().and().csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
+    http.headers().frameOptions().disable();
+  }*/
+
+   @Override
+   public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
+          authenticationManagerBuilder
+                  .userDetailsService(userDetailsService)
+                  .passwordEncoder(passwordEncoder());
+      }
+
+
 }

@@ -1,13 +1,10 @@
 package co.nz.equifax.registration.entity;
 
-import co.nz.equifax.database.AuditModel;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
-import javax.persistence.*;
-import java.util.Date;
+import co.nz.equifax.commons.database.AuditModel;
 
 @Entity
 public class ClientOrg extends AuditModel {
