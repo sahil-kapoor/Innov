@@ -1,9 +1,9 @@
 package co.nz.equifax.registration.controllers;
 
-
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,62 +12,66 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import co.nz.equifax.commons.web.ApiResponse;
+import co.nz.equifax.commons.web.EmptyJsonResponse;
 import co.nz.equifax.registration.entity.ClientOrg;
 import co.nz.equifax.registration.entity.UuidCode;
 import co.nz.equifax.registration.repository.ClientOrgRepository;
 import co.nz.equifax.registration.repository.UuidCodeRepository;
+import co.nz.equifax.registration.services.RegistrationService;
 import co.nz.equifax.utils.Util;
 
 @RestController
 @RequestMapping("/registration")
 public class RegistrationController {
 
-  @Autowired
-  private ClientOrgRepository clientOrgRepository;
+	@Autowired
+	private ClientOrgRepository clientOrgRepository;
 
-/*  public RegistrationController(ClientOrgRepository clientOrgRepository) {
-    this.clientOrgRepository = clientOrgRepository;
-  }*/
+	@Autowired
+	@Qualifier("registrationService")
+	private RegistrationService registrationService;
 
-  @Autowired
-  private UuidCodeRepository uuidCodeRepository;
-/*
-  public RegistrationController(UuidCodeRepository uuidCodeRepository) {
-    this.uuidCodeRepository = uuidCodeRepository;
-  }
-*/
-  @GetMapping("/verify/{id}")
-  public ResponseEntity<Object> verifyId(@PathVariable @NotNull String id) {
-    if(clientOrgRepository.findByUuid(id).isPresent())
-      return new ResponseEntity<>(HttpStatus.OK);
-    else
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-  }
+	@Autowired
+	private UuidCodeRepository uuidCodeRepository;
 
-  @GetMapping("/add")
-  public ResponseEntity<Object> setTasks() {
-    ClientOrg org=new ClientOrg();
-    org.setClientId(1001);
-    org.setUuid(Util.getRandomKeyAlphanumeric(10));
-    org.setOrgId(16929);
-    clientOrgRepository.save(org);
-    UuidCode uuidCode= new UuidCode(org.getUuid(),Long.valueOf(Util.getRandomKeyNumereic(6)).longValue());
-    uuidCodeRepository.save(uuidCode);
-    return new ResponseEntity<>(HttpStatus.OK);
+	@GetMapping("/verify/{code}")
+	public ResponseEntity<?> verifyId(@PathVariable @NotNull String code) {
+		if (registrationService.isCustomerCodeValid(code)) {
+			registrationService.generateOTP(code);
+			return ResponseEntity
+					.ok(new ApiResponse(true, "Customer code is valid. OTP generated.", new EmptyJsonResponse()));
+		}
 
-  }
+		else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ApiResponse(false, "Customer code is valid.", new EmptyJsonResponse()));
+	}
 
-  @GetMapping("/confirm/{id}")
-  public ResponseEntity<Object> confirmId(@PathVariable @NotNull String id,@RequestParam("id") @NotNull long code) {
-	  UuidCode uuidCode= new UuidCode(id,code);
-    if(uuidCodeRepository.findUuidCodeByUuidAndCode(id,code).isPresent())
-      return new ResponseEntity<>(HttpStatus.OK);
-    else
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-  }
+	@GetMapping("/add")
+	public ResponseEntity<Object> setTasks() {
+		ClientOrg org = new ClientOrg();
+		org.setClientId(1001);
+		org.setUuid(Util.getRandomKeyAlphanumeric(10));
+		org.setOrgId(16929);
+		clientOrgRepository.save(org);
+		UuidCode uuidCode = new UuidCode(org.getUuid(), Long.valueOf(Util.getRandomKeyNumereic(6)).longValue());
+		uuidCodeRepository.save(uuidCode);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
- /* @DeleteMapping("/{id}")
-  public void deleteTask(@PathVariable long id) {
-    taskRepository.deleteById(id);
-  }*/
+	@GetMapping("/confirm/{code}")
+	public ResponseEntity<Object> confirmId(@PathVariable @NotNull String code,
+			@RequestParam("otp") @NotNull long otp) {
+		if (registrationService.verifyOTP(code, otp))
+			return ResponseEntity.ok(new ApiResponse(true, "OTP verified.", new EmptyJsonResponse()));
+		else
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ApiResponse(false, "Customer OTP is invalid.", new EmptyJsonResponse()));
+	}
+
+	/*
+	 * @DeleteMapping("/{id}") public void deleteTask(@PathVariable long id) {
+	 * taskRepository.deleteById(id); }
+	 */
 }
