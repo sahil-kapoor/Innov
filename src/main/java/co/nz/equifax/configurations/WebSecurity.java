@@ -1,5 +1,13 @@
 package co.nz.equifax.configurations;
 
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +22,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import co.nz.equifax.security.JwtAuthenticationEntryPoint;
@@ -85,6 +94,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                       .permitAll()*/
                       .antMatchers("/users/**")
                       .permitAll()
+                      .antMatchers("/registration/**")
+                      .permitAll()
                       .antMatchers("/h2-console/**")
                       .permitAll()
                
@@ -92,9 +103,10 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                   .anyRequest()
                       .authenticated();
       http.cors().and().csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
-      http.headers().frameOptions().disable();
+    //  http.headers().frameOptions().disable();
       // Add our custom JWT security filter
       http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+      http.addFilterBefore(new WebSecurityCorsFilter(), ChannelProcessingFilter.class);
 
   }
 
@@ -112,6 +124,5 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                   .userDetailsService(userDetailsService)
                   .passwordEncoder(passwordEncoder());
       }
-
 
 }

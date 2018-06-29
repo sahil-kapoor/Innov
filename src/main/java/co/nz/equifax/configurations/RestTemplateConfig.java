@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -43,14 +44,14 @@ public class RestTemplateConfig {
     SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
 
     //Handle Proxy
-       /* HttpHost proxy = new HttpHost("eisproxynz",8080);
+        HttpHost proxy = new HttpHost("eisproxynz",8080);
         CloseableHttpClient httpClient = HttpClients.custom()
             .setProxy(proxy).setSSLSocketFactory(csf)
-            .build();*/
-
-    CloseableHttpClient httpClient = HttpClients.custom()
-            .setSSLSocketFactory(csf)
             .build();
+
+    /*CloseableHttpClient httpClient = HttpClients.custom()
+            .setSSLSocketFactory(csf)
+            .build();*/
 
     HttpComponentsClientHttpRequestFactory requestFactory =
             new HttpComponentsClientHttpRequestFactory();
@@ -60,8 +61,8 @@ public class RestTemplateConfig {
     requestFactory.setHttpClient(httpClient);
 
     RestTemplate restTemplate = new RestTemplate(requestFactory);
-    restTemplate.getInterceptors().add(
-            new BasicAuthorizationInterceptor("itg2ibmi", "practiv101"));
+    /*restTemplate.getInterceptors().add(
+            new BasicAuthorizationInterceptor("itg2ibmi", "practiv101"));*/
     return restTemplate;
   }
 }

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import co.nz.equifax.commons.exception.AppException;
 import co.nz.equifax.commons.web.ApiResponse;
+import co.nz.equifax.commons.web.CommonHeaders;
 import co.nz.equifax.commons.web.EmptyJsonResponse;
 import co.nz.equifax.security.JwtTokenProvider;
 import co.nz.equifax.user.entities.ApplicationUser;
@@ -64,7 +65,7 @@ public class UserController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateToken(authentication);
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+        return ResponseEntity.ok().body(new AuthenticationResponse(jwt));
     }
 
     @PostMapping("/signup")
@@ -87,7 +88,8 @@ public class UserController {
 
         ApplicationUser result = applicationUserRepository.save(user);
 
-        return ResponseEntity.ok(new ApiResponse(true, "User registered successfully",new EmptyJsonResponse()));
+        return ResponseEntity.ok().body(new ApiResponse(true, "User registered successfully",new EmptyJsonResponse()));
+       
     }
 
 }
