@@ -9,6 +9,10 @@ public class BusinessServiceImpl implements BusinessService {
 
 	@Override
 	public String getScore() {
-		return Util.getRandomKeyNumereic(3);
+		long score=Long.valueOf(Util.getRandomKeyNumereic(3));
+		if(score > 100)
+			return String.valueOf(score); 
+		else 
+			return getScore();
 	}
 }

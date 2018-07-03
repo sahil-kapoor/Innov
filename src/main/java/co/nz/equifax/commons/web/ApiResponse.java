@@ -7,12 +7,19 @@ public class ApiResponse {
     private Boolean success;
     private String message;
     private Object data;
-    private long timeStampSeconds;
+    private long timestamp;
+    private String version;
     
     
-	public long getTimeStampSeconds() {
-		return timeStampSeconds;
+	public long getTimestamp() {
+		return timestamp;
 	}
+	
+
+	public String getVersion() {
+		return version;
+	}
+
 
 	public Object getData() {
 		return data;
@@ -22,8 +29,9 @@ public class ApiResponse {
 		super();
 		this.success = success;
 		this.message = message;
-		this.timeStampSeconds=Instant.now().getEpochSecond();
+		this.timestamp=Instant.now().getEpochSecond();
 		this.data = data;
+		this.version="1.0.0";
 		
 	}
 
